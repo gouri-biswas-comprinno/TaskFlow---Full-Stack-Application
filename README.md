@@ -21,11 +21,11 @@ TaskFlow is a personal task manager planned for a full-stack feature assessment.
 
 ## Proposed stack
 
-React, Java with Spring Boot, Spring Security and JWT, PostgreSQL, Docker Compose, GitHub Actions, and GitHub. pgAdmin is planned as a local database administration tool. GitHub Copilot in VS Code is the intended AI coding assistant.
+React, Java with Spring Boot, Spring Security and JWT, PostgreSQL, Docker and Docker Compose, GitHub Actions, GitHub, and GitHub Copilot in VS Code. pgAdmin is optional for local database administration.
 
 ## Testing, CI, and deployment
 
-Automated frontend/backend checks and GitHub Actions are planned; no tests have been run because the project is still in planning. Docker Compose is for local development and integration. The assessment also requires a separate container-based deployment; the host is not selected and no deployment has been performed.
+Automated frontend/backend tests and GitHub Actions checks are planned; no tests have been run because the project is still in planning. Docker Compose is for local development. Assessment deployment is required, but its constraints, host, and topology have not been confirmed.
 
 ## Approval gate
 

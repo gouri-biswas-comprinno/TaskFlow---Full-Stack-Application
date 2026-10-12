@@ -4,7 +4,7 @@
 
 TaskFlow is a deliberately small personal task manager for the assessment **Build & Present a Full Stack Feature (Design + Code + Deploy)**. Its value is demonstrating a traceable software lifecycle and a working full-stack slice, rather than a broad product feature set.
 
-The planned outcome is a locally reproducible, containerized React + Spring Boot + PostgreSQL application. A user can register, authenticate, revoke their access token by signing out, and perform CRUD operations on tasks they own. Automated tests and GitHub Actions checks provide repeatable evidence; deployment and release verification are planned but not authorized by this inception document.
+The planned outcome is a React + Spring Boot + PostgreSQL application. Docker Compose supports local development. The assessment also requires deployment using the specified stack, but the hosting option and deployment constraints have not been confirmed. A user can register, authenticate, revoke their access token by signing out, and perform CRUD operations on tasks they own. Automated tests and GitHub Actions checks provide repeatable evidence.
 
 ## 2. Scope
 
@@ -16,7 +16,8 @@ The planned outcome is a locally reproducible, containerized React + Spring Boot
 - Authorization that prevents one user from reading or changing another user's tasks.
 - React user interface for authentication and task management.
 - PostgreSQL persistence, administered locally with pgAdmin.
-- Docker images and Docker Compose for frontend, backend, and database; pgAdmin may be an optional Compose service/profile.
+- Docker and Docker Compose for local frontend, backend, and PostgreSQL development; pgAdmin is optional for local administration.
+- Assessment deployment using the specified stack; hosting and deployment constraints remain open pending confirmation.
 - Backend, frontend, integration, and security-focused tests, plus manual user acceptance testing.
 - GitHub Actions checks on pushes and pull requests.
 - Architecture, lifecycle, setup, troubleshooting, and release documentation.
@@ -24,8 +25,8 @@ The planned outcome is a locally reproducible, containerized React + Spring Boot
 ### Out of scope for the assessment-sized first release
 
 - Social login, email verification, password reset, refresh tokens, roles/teams, task sharing, labels, attachments, reminders, recurring tasks, search, and real-time updates.
-- Microservices, Kubernetes, cloud-specific infrastructure, production-grade observability, and a public multi-tenant service.
-- A promise of external hosting until a deployment target and its account/credential requirements are agreed.
+- Features beyond personal task management.
+- A deployment provider or hosting topology before the assessment requirements and suitable options are confirmed.
 
 ## 3. Users and user stories
 
@@ -82,7 +83,7 @@ The planned outcome is a locally reproducible, containerized React + Spring Boot
 - Task fields are title, optional description, completion status, and server-managed creation/update timestamps. No due dates or priorities unless requested.
 - Email is the login identifier; password minimum length proposed as 8 characters.
 - API uses JSON and bearer tokens. Unknown or non-owned task IDs return `404` to reduce resource-existence disclosure.
-- Local Docker Compose is the reproducible deployment target unless an external host is selected.
+- Docker Compose is for local development; assessment deployment is required, but its host and deployment topology remain open.
 - pgAdmin is a local administration aid, not an application runtime dependency.
 
 ### Decisions requiring owner confirmation
@@ -90,7 +91,7 @@ The planned outcome is a locally reproducible, containerized React + Spring Boot
 1. Approve the proposed minimal task fields and exclusion of extra task features.
 2. Approve the proposed email/password rules, 8-character minimum, and 30-minute access-token lifetime.
 3. Choose browser token storage: in-memory (safer against persistence, but reload signs out) or `sessionStorage` (survives reload in a tab, but remains exposed to XSS). The recommendation is in-memory for the smallest security footprint, with a clear reload-to-sign-in behavior.
-4. Confirm local Compose-only delivery or name the external deployment target and available time/accounts.
+4. Confirm the assessment's deployment constraints and select a suitable host/topology. Do not treat local Compose as the assessment deployment.
 5. Confirm the target operating system/runtime constraints and preferred versions, if the assessment specifies them. Proposed baseline: Java 21 LTS, a compatible Spring Boot release, Node.js LTS, and PostgreSQL 16 or later.
 6. Approve optional pgAdmin in a Compose profile and whether CI should also build container images (recommended: build only; do not publish images).
 
@@ -102,5 +103,5 @@ The planned outcome is a locally reproducible, containerized React + Spring Boot
 | JWT revocation introduces state into otherwise stateless authentication | Medium | Keep a small PostgreSQL denylist indexed by `jti` and expiry; test revoked-token rejection through the actual security filter; fail closed on database/denylist errors. |
 | CORS, token storage, and logout semantics can create browser/API integration bugs | Medium | Settle token storage before frontend auth work; test browser requests and revoked-token behavior; avoid logging tokens. |
 | Docker networking/health and local port conflicts delay integration | Medium | Document ports and prerequisites, add database health checks and service readiness handling, and validate Compose early as its own unit. |
-| External deployment credentials or platform setup consume assessment time | High if required | Confirm the host now; keep local Compose as the baseline and do not promise external deployment until the target is known. |
+| Deployment requirements or hosting constraints are unclear | High | Confirm the assessment requirement and feasible host early; keep the provider and deployment topology open until verified. |
 | Tests are postponed until integration | High | Make test evidence and unit-level test work explicit in every construction unit and enforce checks in CI before feature completion. |

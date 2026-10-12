@@ -6,7 +6,7 @@ Complete cross-stack verification and CI, run security-sensitive UAT including r
 
 ## 2. Scope and exclusions
 
-**In scope:** full-stack UAT and smoke tests; persistent revocation across backend restart; GitHub Actions; troubleshooting/architecture/SDLC documentation; host selection and free-tier check; containerized assessment deployment; release verification and presentation preparation.
+**In scope:** full-stack UAT and smoke tests; persistent revocation across backend restart; GitHub Actions; essential troubleshooting/release notes; assessment deployment; presentation preparation.
 
 **Excluded:** deployment without owner approval; image publishing unless separately approved; automatic deployment from pull requests; public pgAdmin; unapproved paid services; new product features.
 
@@ -26,8 +26,8 @@ All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may
 
 - U6 prerequisites: Sprint 3/U5 accepted and Compose stack available.
 - U7 prerequisites: U1/U5 accepted; GitHub repository and Actions available.
-- U8 prerequisites: U6/U7 accepted; selected provider supports frontend/backend containers, durable PostgreSQL, secrets, and HTTPS; owner explicitly approves provider and deployment.
-- Owner has reviewed current free-tier conditions, including suspension/sleep behavior, quotas, data lifetime, build/runtime compatibility, account requirements, and any payment risk.
+- U8 prerequisites: U6/U7 accepted; assessment constraints and a suitable deployment option are confirmed; owner explicitly approves the approach.
+- Confirm required persistence, availability, security, account, and cost constraints before selecting a deployment option.
 
 ## 6. Ordered implementation tasks
 
@@ -37,18 +37,16 @@ All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may
 4. Run manual UAT, document pass/fail and sanitized troubleshooting evidence; check task/user and revoked-token persistence across backend/container restarts.
 5. Add GitHub Actions for backend tests/quality checks and frontend test/lint/build on pushes and pull requests; use least necessary permissions and no deployment secrets for normal PR checks.
 6. Trigger/inspect CI results for the reviewed branch/PR; confirm failures surface as failures and final integrated commands are covered.
-7. Select deployment host with owner. Recommended candidate for evaluation (not a guarantee of current availability): Render free Docker web services for React and Spring Boot plus Neon free-tier managed PostgreSQL. Verify current free-tier eligibility, limits, sleep behavior, PostgreSQL persistence/expiry, connection restrictions, region/network/TLS, and expected demo availability before approval. Keep a container-capable alternative available if unsuitable. This deploys frontend/backend containers; database may be provider-managed PostgreSQL rather than a separately hosted database container.
-8. With explicit approval, configure secret values through host secret management; deploy frontend/backend containers; apply migrations; keep PostgreSQL data persistent; do not expose pgAdmin publicly. Avoid paid resources unless separately approved.
-9. Verify the deployed release over HTTPS: registration/login, task CRUD, cross-user denial, logout, backend restart with DB intact, revoked-token replay, logs and configuration; document commit SHA, CI links, deployment identifier/environment, sanitized results, limitations, and recovery/rollback steps.
+7. Confirm assessment deployment requirements and review suitable hosting options with the owner. Do not assume a provider or change the required stack.
+8. After explicit approval, configure runtime secrets and deploy using the approved React, Spring Boot, and PostgreSQL architecture; keep PostgreSQL data persistent and do not expose pgAdmin publicly.
+9. Verify the deployment: registration/login, task CRUD, cross-user denial, logout, backend restart with PostgreSQL retained, revoked-token replay, and safe configuration/logs. Record sanitized release evidence and known limitations.
 10. Prepare a short assessment walkthrough: requirements/design → architecture/data flow → staged commits and tests → security demonstration → CI → deployed feature → lessons/known limitations. Capture only non-sensitive screenshots/log evidence.
 
 ## 7. Expected deliverables and files
 
-- GitHub Actions workflow(s) under `.github/workflows/`.
-- Automated Compose restart/replay smoke test and documented invocation, plus any release checklist/script.
-- Updated [04-validation-and-release-plan.md](../04-validation-and-release-plan.md), [README.md](../../README.md), architecture/setup/troubleshooting notes, UAT and release evidence.
-- Container deployment configuration and provider settings documented without credentials; a deployment URL/identifier only after an approved deployment.
-- Presentation outline/evidence in an owner-approved location; no secrets in screenshots.
+- GitHub Actions checks, integration/restart smoke test, and documented test invocation.
+- Updated setup, validation, troubleshooting, UAT, and release evidence in the existing planning/README documents.
+- Deployment configuration and presentation evidence only after the owner approves the deployment approach; never include credentials or tokens.
 
 ## 8. Verifiable acceptance criteria
 
@@ -56,7 +54,7 @@ All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may
 - Duplicate-registration, invalid-login, cross-user task access, and logout/replay tests pass.
 - Automated release smoke test proves that a token revoked before expiry remains rejected after the backend is restarted while PostgreSQL storage is retained.
 - UAT covers register → login → own CRUD → logout, plus unauthorized access and persisted revocation; sanitized results are recorded.
-- A suitable external host is selected with owner approval; frontend/backend run as containers and deployed PostgreSQL state persists. Local Compose alone does not satisfy this criterion.
+- The owner has confirmed assessment deployment requirements and approved a suitable deployment option using the specified stack. Local Compose alone does not satisfy this criterion.
 - HTTPS, environment-managed secrets, no publicly exposed pgAdmin/database unless intentionally protected, and no sensitive values in source/image/logs.
 - Release evidence and concise presentation walkthrough are ready; known limitations are explicit.
 
@@ -75,16 +73,16 @@ Update [README.md](../../README.md) with truthful local and deployed run instruc
 
 ## 11. Risks, open decisions, and mitigations
 
-- **High risk — external free-tier limitations:** terms, sleeping services, database expiry/storage, egress, build quotas, and Java container support can change. Verify before choosing; owner approves any spend; keep alternative container-capable providers under review.
+- **Open — deployment constraints:** host, topology, persistence, and availability requirements are unconfirmed. Resolve with the assessment/owner before selecting an option; do not assume a provider or database service.
 - **High risk — scope/time:** CI, complete security regression, external deployment, UAT, and presentation are significant work. Freeze features, start host evaluation during Sprint 0, and reserve a focused final block for verification and presentation.
 - **Risk — persistent revocation test:** restarting backend must not recreate/delete DB or change signing configuration. Script backend-only restart and assert old token is rejected by the same stable API origin.
 - **Risk — credentials/data exposure:** use platform secret storage and restricted DB networking; redact logs/screenshots; never publish environment files.
-- **Open:** final host and exact service combination; Render + Neon is only a candidate and must pass owner review and current policy/limits check.
+- **Open:** final host and deployment topology. Confirm that the required stack can be deployed and verified before approval.
 
 ## 12. Definition of Done and sprint exit criteria
 
-U6/U7/U8 criteria pass; security regressions and restart/replay test evidence are retained; CI is green; an approved external container deployment is verified (or the sprint is blocked awaiting the explicit provider/deployment decision); UAT, sanitized troubleshooting, release evidence, and presentation outline are complete; owner accepts the release.
+U6/U7/U8 criteria pass; security and restart/replay evidence are retained; CI is green; the approved assessment deployment is verified; UAT and demonstration evidence are complete; owner accepts the release. If deployment constraints remain unresolved, deployment work remains blocked.
 
 ## 13. Owner-review and approval gate
 
-Before deployment, owner explicitly approves provider, resource limits/terms, secret configuration, and any cost/account implications. After deployment, owner reviews CI, security tests, UAT, release evidence, and demo. Owner performs all commits and pushes manually and decides whether to present/release. No deployment proceeds on inferred approval.
+Before deployment, owner explicitly approves the hosting option and deployment approach. Afterward, owner reviews CI, security tests, UAT, release evidence, and demo. Owner performs all commits and pushes manually. No deployment proceeds on inferred approval.

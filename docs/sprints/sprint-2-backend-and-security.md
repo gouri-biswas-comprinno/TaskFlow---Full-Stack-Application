@@ -41,7 +41,7 @@ Both are defined in [03-construction-plan.md](../03-construction-plan.md).
 
 ## 7. Expected deliverables and files
 
-Expected additions under backend source/test conventions: auth/task DTOs, controllers, services, repositories, security/JWT components, exception handling, Flyway updates if needed, unit and Spring integration/security tests. Update API examples and security flow in [02-architecture-and-design.md](../02-architecture-and-design.md), and record actual test commands in [04-validation-and-release-plan.md](../04-validation-and-release-plan.md).
+Expected additions under backend conventions: auth/task request handling, services, persistence access, security/JWT components, safe error handling, and unit/integration/security tests. Update API/security documentation only where actual behavior differs from the approved design.
 
 ## 8. Verifiable acceptance criteria
 

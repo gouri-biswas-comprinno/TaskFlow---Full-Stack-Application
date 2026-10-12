@@ -6,7 +6,7 @@ Tests are added with the behavior they protect, not deferred to the end. Exact f
 
 | Level | Focus | Planned evidence |
 |---|---|---|
-| Backend unit | Auth/task service rules, validation, ownership behavior, JWT claim handling, error mapping. | Focused JUnit tests with deterministic inputs and no external deployment requirement. |
+| Backend unit | Auth/task service rules, validation, ownership behavior, JWT claim handling, error mapping. | Focused automated tests with deterministic inputs. |
 | Backend integration | Spring wiring, PostgreSQL mappings/migrations, controllers, serialization, repositories, error/status behavior. | Tests against an isolated PostgreSQL instance (containerized test DB if available) or an explicitly documented test DB setup. Never run destructive tests against a developer's data. |
 | Authentication/security | Password hashing, valid/invalid/expired JWT, malformed signature/claims, revoked token before expiry, logout persistence, protected routes, fail-closed denylist lookup, cross-user task isolation. | Spring Security integration tests that traverse the real filter chain, not just token utility unit tests. |
 | Frontend | Form validation, API client headers/errors, task states and UI behavior, logout clearing auth state. | Component and API-client tests with controlled network responses; no real credentials. |
@@ -24,7 +24,7 @@ Tests are added with the behavior they protect, not deferred to the end. Exact f
 6. Sign out the first user, then replay that exact access token against a protected endpoint before its expiry. The request must be rejected; a second user's valid token must continue to work.
 7. Restart the backend (without deleting the database volume) and verify user/task data persists and the logged-out token remains revoked. Include an automated Compose-level check that replays the exact revoked token against a protected endpoint after restarting only the backend while retaining PostgreSQL.
 8. Run the backend and frontend checks locally; push a reviewed commit and verify the corresponding GitHub Actions checks.
-9. On the separately approved container deployment target, repeat the security-sensitive smoke checks over HTTPS and verify secrets are environment-managed. If no host is selected or approved, deployment verification remains blocked; local Compose release verification is useful evidence but is not a substitute for the assessment deployment.
+9. After the assessment deployment requirements and suitable host/topology are confirmed and approved, repeat security-sensitive smoke checks and verify runtime secrets are protected. Until then, deployment verification remains open; local Compose is not a substitute for assessment deployment.
 
 ## 3. Quality gates
 
@@ -35,12 +35,12 @@ Tests are added with the behavior they protect, not deferred to the end. Exact f
 
 ## 4. Troubleshooting and evidence
 
-For each issue encountered, record the observed symptom, exact command/test, relevant sanitized log excerpt, root cause, change, and retest result in the implementation/decision log (planned to be added during construction, not now). Never copy passwords, signing keys, database credentials, or bearer tokens into documentation or logs.
+Record significant issues and their resolution using sanitized logs. Never copy passwords, signing keys, database credentials, or bearer tokens into documentation or logs.
 
 Useful evidence to retain for the assessment:
 
 - Approved requirements, architecture, and construction plan.
-- Per-unit test results and owner review/approval notes.
+- Test results and owner review/approval notes.
 - GitHub Actions run links for pushes/pull requests.
 - Sanitized Compose health/startup and API smoke-check output.
 - UAT checklist results and a release/deployment verification record.
@@ -48,8 +48,8 @@ Useful evidence to retain for the assessment:
 
 ## 5. Release and deployment policy
 
-- Docker Compose on a developer machine is the local development/integration target, not the final assessment deployment.
-- A container-based external deployment is required for assessment completion. It is a separate, explicit decision after the owner chooses a host, confirms account access, and reviews current free-tier limits, data persistence, availability, and security trade-offs.
+- Docker Compose is for local development/integration, not the final assessment deployment.
+- Assessment deployment is required. Host and deployment topology remain open until the assessment constraints and suitable options are confirmed and explicitly approved.
 - Do not publish images or deploy automatically from pull requests. If a host is later selected, add a reviewed release workflow with protected secrets and an explicit release trigger.
-- Release verification includes migration/startup, registration/login, JWT revocation, replay of a revoked token after a backend restart with PostgreSQL retained, task ownership, CRUD, HTTPS for public hosting, and a check that logs contain no sensitive authentication data.
+- Release verification includes startup/migrations, registration/login, JWT revocation, replay after backend restart with PostgreSQL retained, task ownership, CRUD, and checks for secure transport/secrets when applicable.
 - Record the release identifier, commit SHA, environment, verification results, and known limitations without recording secrets.

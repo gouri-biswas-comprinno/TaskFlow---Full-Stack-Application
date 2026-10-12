@@ -18,7 +18,7 @@ Browser
     users | tasks | revoked_tokens
 ```
 
-Docker Compose provides frontend, backend, and PostgreSQL services. pgAdmin is a developer-facing database tool and should be opt-in (Compose profile) so the core application does not depend on it. GitHub Actions runs checks on pushes and pull requests. The application is a modular monolith; separate services would add deployment and integration cost without helping this assessment.
+Docker Compose provides the frontend, backend, and PostgreSQL for local development. pgAdmin is optional and local-only. GitHub Actions runs checks on pushes and pull requests. Deployment host and topology are open until assessment constraints are confirmed; do not substitute a different database or application stack.
 
 ## 2. Components and responsibilities (LLD)
 
@@ -34,10 +34,10 @@ Docker Compose provides frontend, backend, and PostgreSQL services. pgAdmin is a
 
 - **Controllers:** map REST paths and request/response DTOs; do not contain persistence or ownership policy.
 - **Services:** implement registration, authentication/logout, validation rules not covered at the boundary, and task ownership/business rules.
-- **Repositories:** use Spring Data/JPA (or another selected Spring persistence approach) for users, tasks, and revocations. Task queries must include the owner ID.
+- **Repositories:** persist users, tasks, and revocations in PostgreSQL. Task queries must include the owner ID.
 - **Security:** password encoder, authentication manager, JWT issue/validation, bearer filter, authorization rules, and denylist lookup. Protected requests must pass signature/expiry and denylist checks.
 - **DTO/validation:** expose only contract fields; never serialize persistence entities or password hashes directly.
-- **Database migrations:** Flyway is proposed to version schema changes and make fresh environments reproducible.
+- **Database schema:** versioned SQL migrations make fresh environments reproducible.
 
 ### Database
 
@@ -106,18 +106,18 @@ The exact validation limits (email normalization, password length, title maximum
 
 | Decision | Rationale / trade-off |
 |---|---|
-| One React app and one Spring Boot API | Clear boundaries while staying achievable in under a week; no microservice overhead. |
+| One React app, one Spring Boot API, and PostgreSQL | The simplest structure for the required feature and stack. |
 | PostgreSQL for application state, including revocations | Durable owner/task data and revocation state survive backend restarts; supports the mandatory relational database requirement. |
 | JWT bearer auth plus a database denylist | Meets the explicit revocation-before-expiry requirement. It is not fully stateless; the database lookup is a deliberate correctness/security cost. |
 | Use `jti` as the revocation key | Avoids storing reusable bearer tokens; unique key supports a direct indexed lookup. |
 | Derive task owner from authenticated principal | Prevents a client from claiming another user's ownership; ownership is enforced server-side. |
-| Flyway migrations | Reproducible schema for developers, tests, and containers; avoids hidden reliance on ORM auto-DDL. |
+| Versioned SQL migrations | Reproducible schema for developers, tests, and containers. |
 | Owner-scoped queries and `404` for non-owned task IDs | Access control is performed in persistence operations as well as service logic, with reduced existence disclosure. |
 | pgAdmin is optional and local | Meets database administration needs without making the app depend on an admin UI or exposing it as a public service. |
-| Compose first, external host undecided | Produces a repeatable assessment demo without choosing an unconfirmed cloud provider or requiring credentials. |
+| Compose for local development | Provides a repeatable local environment; assessment deployment details remain open. |
 
 ## 6. Runtime configuration and container design
 
 Proposed services: `frontend`, `backend`, `db`; optional `pgadmin` profile. Use a named PostgreSQL volume, readiness health check, backend database dependency/readiness handling, and documented port bindings. Keep credentials and JWT signing key in an ignored local environment file or injected environment; provide a safe example file containing placeholders only. No secrets in Docker image layers, source, CI logs, or frontend build variables.
 
-For hosted use, bind only required ports, use HTTPS, restrict database and pgAdmin exposure, use strong per-environment secrets, and follow the selected host's secret-management mechanism. Deployment target and production topology remain undecided.
+The deployment host and topology remain undecided pending confirmation of assessment constraints and suitable hosting options. Do not expose pgAdmin publicly or commit secrets. For any public deployment, confirm HTTPS, database persistence, and secure runtime secret configuration before approval.

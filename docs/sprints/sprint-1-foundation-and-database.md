@@ -6,7 +6,7 @@ Create a reproducible project foundation and local PostgreSQL-backed environment
 
 ## 2. Scope and exclusions
 
-**In scope:** React and Spring Boot skeletons; documented tool versions; Dockerfiles; Docker Compose for frontend/backend/database; optional pgAdmin profile; safe environment examples; PostgreSQL named volume; health/readiness checks; Flyway migrations and persistence repositories.
+**In scope:** React and Spring Boot foundation; Docker Compose for local frontend/backend/PostgreSQL; optional local pgAdmin; safe configuration; persistent PostgreSQL storage; health checks; schema setup and persistence access.
 
 **Excluded:** registration/login/logout endpoints, JWT/security behavior, task CRUD UI/API, publishing images, CI completion, and external deployment.
 
@@ -34,18 +34,18 @@ Both are defined in [03-construction-plan.md](../03-construction-plan.md).
 2. Add environment variable templates and ignore rules; ensure placeholders only and no secrets enter source or image layers.
 3. Add frontend/backend Dockerfiles and Compose services for frontend, backend, and PostgreSQL; define readiness/health checks and a named database volume.
 4. Add optional pgAdmin service/profile and document safe local access; it is not exposed in hosted deployment.
-5. Define initial PostgreSQL schema and Flyway migrations for `users`, `tasks`, and `revoked_tokens`, including unique email, owner FK/index, `jti` key, timestamps, and expiry index as approved.
+5. Define PostgreSQL schema changes for `users`, `tasks`, and `revoked_tokens`, including unique email, owner relation, `jti` key, and required timestamps/indexes.
 6. Add persistence mappings/repositories and isolated integration-test configuration.
 7. Verify clean startup, migration, health state, DB restart persistence, and repository constraints.
 
 ## 7. Expected deliverables and files
 
-Expected paths, subject to approved project conventions: root frontend/backend build manifests; frontend source skeleton; backend source/test skeleton; `Dockerfile` files; `compose.yaml`; `.env.example` and ignore rules; migration SQL under backend resources; repository integration tests; setup instructions in [README.md](../../README.md) and design updates in [02-architecture-and-design.md](../02-architecture-and-design.md).
+Expected deliverables: React and Spring Boot foundations, Dockerfiles and Compose configuration, safe environment example, PostgreSQL schema changes and persistence tests, and updated local setup instructions.
 
 ## 8. Verifiable acceptance criteria
 
-- Fresh checkout builds and Compose starts the frontend, backend, and PostgreSQL with observable health/readiness.
-- Database schema is created by migrations on an empty database; no runtime ORM auto-create dependency.
+- Fresh checkout builds and Compose starts frontend, backend, and PostgreSQL with observable health.
+- Database schema is reproducible from a clean database.
 - PostgreSQL named volume preserves data across service restart.
 - pgAdmin is usable when enabled and is not required for app startup.
 - Email uniqueness, task owner FK, owner index, and revocation `jti` uniqueness are enforced.
@@ -53,20 +53,20 @@ Expected paths, subject to approved project conventions: root frontend/backend b
 
 ## 9. Required automated and manual tests
 
-- Automated: frontend/backend skeleton build; Compose configuration validation; migration tests on an empty database; repository integration tests for unique email, owner FK/query, and revocation lookup; health checks.
+- Automated: frontend/backend build, Compose configuration validation, clean-database setup, persistence tests for uniqueness/ownership/revocation, and health checks.
 - Manual: clean Compose startup; optional pgAdmin connection; restart PostgreSQL without removing its volume and verify test record remains; inspect diff/config for secrets and published ports.
 - Do not use volume deletion as routine test cleanup where it risks user data; use an isolated test project/volume.
 
 ## 10. Documentation updates required
 
-Update README with exact prerequisites, approved versions, start/stop/test commands, port map, pgAdmin profile, environment setup, and volume retention/reset warning. Update architecture/schema if accepted implementation choices differ; record sanitized setup issues and resolutions.
+Document local prerequisites and commands, pgAdmin access, environment setup, and how PostgreSQL data persists. Update the architecture if approved choices differ.
 
 ## 11. Risks, open decisions, and mitigations
 
 - **Risk:** mismatched React/Java/Spring/Docker versions; pin compatible versions only after owner approves.
 - **Risk:** port collisions and Docker availability; document ports and diagnose health logs before moving on.
-- **Open:** ORM/persistence implementation details and exact migration naming; choose conventional Spring Data/JPA + Flyway unless review identifies a better minimal fit.
-- **Open:** CI image build scope remains per project brief; no image publishing in this sprint.
+- **Open:** exact persistence implementation and schema-change format; choose a simple approach consistent with the approved stack.
+- **Risk:** Docker availability or port conflicts; document and resolve before dependent work.
 
 ## 12. Definition of Done and sprint exit criteria
 
