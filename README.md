@@ -1,10 +1,10 @@
 # TaskFlow
 
-TaskFlow is a personal task manager for the full-stack feature assessment. The approved architecture is a React frontend, a Java 21/Spring Boot backend, and PostgreSQL. Database persistence and the U3 authentication flow are implemented; task management is assigned to U4.
+TaskFlow is a personal task manager for the full-stack feature assessment. The approved architecture is a React frontend, a Java 21/Spring Boot backend, and PostgreSQL. Database persistence, U3 authentication, and U4 owner-scoped task APIs are implemented; frontend integration remains later work.
 
 ## Project status
 
-**Sprint 2 — U3 implemented; owner review pending.** U1 and U2 provide the React/Spring foundation and PostgreSQL persistence. U3 adds registration, login, Spring Security JWT validation, and PostgreSQL-backed logout revocation. U4 task APIs and the frontend authentication flow are not implemented. U2's migration was applied to the local Compose database; its named volume and data were retained. Do not begin U4 until U3 is reviewed and accepted.
+**Sprint 2 — U3 approved; U4 implemented, owner review pending.** U1 and U2 provide the React/Spring foundation and PostgreSQL persistence. U3 adds registration, login, Spring Security JWT validation, and PostgreSQL-backed logout revocation. U4 adds authenticated, per-user task CRUD APIs. The frontend authentication/task workflows are not implemented. No schema migration was required for U4. Do not begin U5 until U4 is reviewed and accepted.
 
 ## Planning documents
 
@@ -120,6 +120,8 @@ This requires Maven, a Java runtime compatible with the project's Java 21 target
 
 **U3 verification (2026-10-13):** `mvn -f backend\pom.xml "-Dtest=AuthenticationIntegrationTest,RevocationCheckingJwtDecoderTest" test` passed (6 tests), and `mvn -f backend\pom.xml package` passed (11 tests total). Revocation replay was rejected using a newly constructed decoder against the same PostgreSQL database; a separate full backend-process restart verification remains planned for Sprint 4.
 
+**U4 verification (2026-10-13):** `mvn -f backend\pom.xml -Dtest=TaskApiIntegrationTest test` passed (5 tests), and `mvn -f backend\pom.xml test` passed (16 tests total). These cover the task CRUD lifecycle, validation, unauthenticated requests, unknown IDs, and cross-user read/update/delete denial against an isolated PostgreSQL container.
+
 Frontend production build:
 
 ```powershell
@@ -134,7 +136,7 @@ docker compose ps
 Invoke-RestMethod http://localhost:8080/api/health
 ```
 
-The persistence integration tests cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, unique revocation `jti`, authentication, and logout replay. Task APIs, frontend authentication, GitHub Actions, and assessment deployment remain planned work.
+The persistence integration tests cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, unique revocation `jti`, authentication, logout replay, and task API behavior. Frontend authentication/task workflows, GitHub Actions, and assessment deployment remain planned work.
 
 Assessment deployment is required, but the provider and topology remain open until the constraints are confirmed and approved. Docker Compose in this repository is for local development only.
 
@@ -142,6 +144,6 @@ Assessment deployment is required, but the provider and topology remain open unt
 
 The committed `.env.example` contains local-only placeholder credentials, not production secrets. Keep real secrets in the ignored `.env` locally and use an approved secret store for any future hosted environment. The backend connects to PostgreSQL over the Compose network using the existing PostgreSQL environment values. Flyway applies additive schema migrations at backend startup. Keep the named volume; do not run `docker compose down -v`.
 
-U3 delivers Spring Security/JWT access tokens and persistent PostgreSQL-backed revocation. U4 will implement server-side task ownership enforcement; frontend integration, GitHub Actions, and deployment follow in later units.
+U3 delivers Spring Security/JWT access tokens and persistent PostgreSQL-backed revocation. U4 enforces task ownership on the server; frontend integration, GitHub Actions, and deployment follow in later units.
 
-U3 does not implement task APIs or UI behavior. Review and explicitly accept U3 before starting U4.
+Review and explicitly accept U4 before starting U5. U4 does not implement frontend behavior.

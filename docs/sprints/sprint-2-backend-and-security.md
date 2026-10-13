@@ -4,6 +4,8 @@
 
 Implement the backend registration, sign-in, sign-out, JWT security, persistent server-side revocation, and authenticated owner-scoped task CRUD API, with tests that exercise the real Spring Security request path.
 
+**Progress:** U3 has been approved by the owner. U4 is implemented and its backend tests pass; owner review and approval remain required before U5.
+
 ## 2. Scope and exclusions
 
 **In scope:** BCrypt; generic invalid-login behavior; JWT issuance/signature/issuer/expiry validation; persisted `jti` denylist; fail-closed revocation lookup; DTO validation/error mapping; protected CRUD and per-user ownership.
@@ -17,7 +19,7 @@ References: [01-project-brief-and-requirements.md](../01-project-brief-and-requi
 ## 4. Construction units covered
 
 - **U3 — Registration, login, JWT security, and revocation**
-- **U4 — Task API and per-user authorization**
+- **U4 — Task API and per-user authorization** — implemented; the existing schema is sufficient, with owner-scoped repository operations and no migration.
 
 Both are defined in [03-construction-plan.md](../03-construction-plan.md).
 
@@ -51,6 +53,7 @@ Expected additions under backend conventions: auth/task request handling, servic
 - Logout durably records `jti`; replaying that token on a protected API is rejected before expiry. Denylist database failure does not grant access.
 - Authenticated owner can perform CRUD. Unauthenticated calls fail; another user cannot read, update, or delete the task; task API never accepts ownership from caller input.
 - API validation/status/error shape matches documented contract.
+- **U4 limits:** title is required, non-blank, trimmed, and at most 200 characters; description is optional, trimmed, blank-to-null, and at most 2,000 characters. PATCH accepts one or more of `title`, `description`, and `completed`; unknown fields are rejected.
 
 ## 9. Required automated and manual tests
 
@@ -58,6 +61,8 @@ Expected additions under backend conventions: auth/task request handling, servic
 - Automated integration tests: duplicate registration; invalid login; successful auth; real security filter rejects missing/invalid/expired/revoked tokens; logout then replay; denylist row remains persisted after recreating application/security context; task CRUD and validation.
 - Automated cross-user tests: user B GET/PATCH/DELETE against user A's task returns `404` and leaves A's data unchanged.
 - Manual: inspect API responses/logs for no hashes, signing keys, or raw tokens; exercise relevant requests with API client. The full backend-process restart/replay test is a Sprint 4 release smoke gate.
+
+**U4 verification (2026-10-13):** `mvn -f backend\pom.xml -Dtest=TaskApiIntegrationTest test` passed (5 tests, 0 failures/errors). `mvn -f backend\pom.xml test` passed (16 tests, 0 failures/errors). Integration tests use a disposable PostgreSQL 16.9 Testcontainer. `git diff --check` passed.
 
 ## 10. Documentation updates required
 
@@ -76,4 +81,4 @@ U3/U4 criteria and required automated tests pass; authorization and denylist beh
 
 ## 13. Owner-review and approval gate
 
-Owner reviews auth/logout behavior, replay evidence, fail-closed semantics, API contract, and cross-user tests. Owner commits/pushes manually. Do not start Sprint 3 until Sprint 2 is explicitly accepted.
+U3 was approved by the owner before U4 began. The owner now reviews the CRUD contract, per-user authorization evidence, and tests for U4; owner commits/pushes manually. Do not start Sprint 3 until Sprint 2/U4 is explicitly accepted.

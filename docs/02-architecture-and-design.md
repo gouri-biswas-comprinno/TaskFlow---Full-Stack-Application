@@ -100,7 +100,7 @@ Task representation:
 }
 ```
 
-The exact validation limits (email normalization, password length, title maximum, description maximum, and whether an empty description is equivalent to null) must be set in the first relevant construction unit and shared between API documentation and tests.
+Task validation limits established in U4: title is required, non-blank, trimmed, and at most 200 characters; description is optional, trimmed, normalized to `null` when blank, and at most 2,000 characters. PATCH must contain at least one supported field; a supplied title must remain non-blank, description may be set to `null`, and `completed` must be a boolean. Unknown fields (including `ownerId`) are rejected on PATCH and ignored on creation; the server always derives ownership from the authenticated JWT subject.
 
 ## 5. Key architecture decisions and rationale
 

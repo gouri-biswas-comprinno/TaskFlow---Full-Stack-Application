@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.taskflow.auth.EmailAlreadyRegisteredException;
 import com.taskflow.auth.InvalidCredentialsException;
+import com.taskflow.task.InvalidTaskRequestException;
+import com.taskflow.task.TaskNotFoundException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -29,6 +31,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
     public ResponseEntity<ApiErrorResponse> invalidRequest(HttpServletRequest request) {
         return error(HttpStatus.BAD_REQUEST, "Request validation failed", request);
+    }
+
+    @ExceptionHandler(InvalidTaskRequestException.class)
+    public ResponseEntity<ApiErrorResponse> invalidTaskRequest(HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "Task validation failed", request);
+    }
+
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> taskNotFound(HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, "Task not found", request);
     }
 
     private ResponseEntity<ApiErrorResponse> error(

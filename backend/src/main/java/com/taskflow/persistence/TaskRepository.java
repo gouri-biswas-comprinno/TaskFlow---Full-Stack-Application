@@ -55,4 +55,38 @@ public class TaskRepository {
                 ownerId);
         return tasks.stream().findFirst();
     }
+
+    public List<TaskRecord> findAllByOwnerId(UUID ownerId) {
+        return jdbcTemplate.query(
+                """
+                        SELECT id, owner_id, title, description, completed, created_at, updated_at
+                        FROM tasks
+                        WHERE owner_id = ?
+                        ORDER BY created_at DESC, id
+                        """,
+                TASK_MAPPER,
+                ownerId);
+    }
+
+    public boolean updateByIdAndOwnerId(TaskRecord task) {
+        return jdbcTemplate.update(
+                """
+                        UPDATE tasks
+                        SET title = ?, description = ?, completed = ?, updated_at = ?
+                        WHERE id = ? AND owner_id = ?
+                        """,
+                task.title(),
+                task.description(),
+                task.completed(),
+                Timestamp.from(task.updatedAt()),
+                task.id(),
+                task.ownerId()) == 1;
+    }
+
+    public boolean deleteByIdAndOwnerId(UUID id, UUID ownerId) {
+        return jdbcTemplate.update(
+                "DELETE FROM tasks WHERE id = ? AND owner_id = ?",
+                id,
+                ownerId) == 1;
+    }
 }
