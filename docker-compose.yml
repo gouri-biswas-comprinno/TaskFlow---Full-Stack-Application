@@ -23,6 +23,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      TASKFLOW_JWT_SECRET: ${TASKFLOW_JWT_SECRET:?Set TASKFLOW_JWT_SECRET in the shell environment (minimum 32 characters)}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

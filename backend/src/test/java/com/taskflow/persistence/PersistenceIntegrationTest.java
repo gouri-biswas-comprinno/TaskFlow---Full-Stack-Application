@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers
 class PersistenceIntegrationTest {
 
+    private static final String TEST_JWT_SECRET = "taskflow-test-signing-key-with-32-bytes-minimum";
+
     @Container
     private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16.9-alpine")
             .withDatabaseName("taskflow_test")
@@ -34,6 +36,7 @@ class PersistenceIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("taskflow.jwt.secret", () -> TEST_JWT_SECRET);
     }
 
     @Autowired
