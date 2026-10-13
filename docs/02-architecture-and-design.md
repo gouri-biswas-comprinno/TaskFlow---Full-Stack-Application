@@ -26,8 +26,8 @@ Docker Compose provides the frontend, backend, and PostgreSQL for local developm
 
 - **Auth views/components:** registration and sign-in forms, validation, sign-out action.
 - **Task views/components:** task list, create/edit form, completion control, delete action.
-- **API client:** base URL, JSON/error handling, and bearer authorization header. Keep token handling in one place.
-- **App/auth state:** signed-in state and current task data; do not treat frontend checks as authorization.
+- **API client:** sends same-origin `/api` requests, handles JSON/error/network responses, and adds the bearer authorization header to protected calls. Local Vite development proxies `/api` to the backend using `VITE_BACKEND_TARGET`.
+- **App/auth state:** holds the current access token in React memory only. A page reload returns to the signed-out view; neither `localStorage` nor `sessionStorage` restores authentication. The backend remains authoritative for identity and task ownership.
 - No separate client-side router is required for the first release; a simple view/state flow is sufficient.
 
 ### Backend
@@ -58,7 +58,9 @@ All timestamps should be stored consistently (UTC/`timestamptz`). Deleting a use
 5. The authenticated principal supplies the user ID for task operations. Service/repository calls always filter by both task ID and owner ID. Do not accept an owner ID from request data. Return `404` for a task not owned by the caller.
 6. If the database/revocation lookup is unavailable, protected authentication fails closed rather than treating the token as unrevoked.
 
-Proposed token signing is HS256 with a sufficiently long random secret injected as environment configuration. A public deployment must use HTTPS and an externally managed secret. Token storage in the browser is an owner decision (see the project brief); the frontend must never place a signing secret in its bundle.
+Proposed token signing is HS256 with a sufficiently long random secret injected as environment configuration. A public deployment must use HTTPS and an externally managed secret. The frontend keeps the access token in memory only and requires sign-in after reload; it never places the signing secret in its bundle.
+
+Frontend logout calls `POST /api/auth/logout` and clears in-memory authentication only after the documented `204 No Content` response. A failed request or any other response leaves the user signed in and reports that server-side revocation was not confirmed.
 
 ## 4. API contract (proposed v1)
 
