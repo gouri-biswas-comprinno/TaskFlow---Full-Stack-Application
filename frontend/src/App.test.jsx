@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
-import * as api from "./api.js";
+import * as api from "./services/api.js";
 
-vi.mock("./api.js", () => ({
+vi.mock("./services/api.js", () => ({
   createTask: vi.fn(),
   deleteTask: vi.fn(),
   listTasks: vi.fn(),
