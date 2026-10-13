@@ -4,7 +4,7 @@ TaskFlow is a personal task manager for the full-stack feature assessment. The a
 
 ## Project status
 
-**Sprint 1 — U1: Application foundation.** The React and Spring Boot applications, local Docker Compose environment, PostgreSQL service, and health endpoint are in place. U1 does not include database integration, migrations, authentication, JWT revocation, or task features. Do not begin U2 until the owner reviews and explicitly approves U1.
+**Sprint 1 — U1 approved; U2 implemented and verified, owner acceptance pending.** The foundation and PostgreSQL persistence layer are in place. U2 adds Flyway migrations and Spring JDBC repositories; authentication, JWT revocation, and task APIs remain later work. The migration was applied successfully to the local Compose database without deleting its volume or data. The isolated PostgreSQL integration tests now pass with Testcontainers 2.0.5 from the Windows host. Do not begin U3 until the owner accepts U2.
 
 ## Planning documents
 
@@ -31,6 +31,7 @@ TaskFlow is a personal task manager for the full-stack feature assessment. The a
 | Vite | 6.4.4 |
 | PostgreSQL | 16.9 (container image) |
 | pgAdmin | 9.3 (optional Compose profile) |
+| Flyway | Managed by Spring Boot 3.5.3 dependency management |
 
 ## Prerequisites
 
@@ -52,7 +53,7 @@ Run these commands from the repository root.
 
    The values in `.env.example` are for local development only. Replace them with your own local values if needed. `.env` is ignored by Git; do not put production credentials in it or commit it.
 
-2. Check the Compose configuration and build/start the frontend, backend, and PostgreSQL:
+2. Check the Compose configuration and build/start the frontend, backend, and PostgreSQL. On backend startup, Flyway applies pending migrations to the configured database:
 
    ```powershell
    docker compose config
@@ -69,7 +70,7 @@ Run these commands from the repository root.
    Invoke-RestMethod http://localhost:8080/api/health
    ```
 
-   The health response should contain `status: UP`; the frontend also displays the API health result.
+   The health response should contain `status: UP`; the frontend also displays the API health result. The migration creates the three planned tables if they do not already exist.
 
 4. To use optional pgAdmin, start the `admin` profile:
 
@@ -93,13 +94,17 @@ Run these commands from the repository root.
 
    PostgreSQL data is stored in the named volume `taskflow-postgres-data` and is retained by `docker compose down` and container restarts. Do not use `docker compose down -v` unless you intentionally want to delete that database volume and its data.
 
-## U1 checks
+## U1 and U2 checks
 
-Backend health endpoint test:
+Run backend tests from the repository root. The persistence integration tests start a separate, temporary PostgreSQL 16.9 container through Testcontainers; they do not connect to the Compose development database:
 
 ```powershell
-docker compose --profile test run --rm backend-test
+mvn -f backend\pom.xml test
 ```
+
+This requires Maven, a Java runtime compatible with the project's Java 21 target, and a Docker Engine endpoint that Testcontainers can access. Testcontainers 2.0.5 starts a disposable PostgreSQL 16.9 container; the tests do not connect to or modify the Compose development database.
+
+**U2 verification (2026-10-13):** `mvn -f backend\pom.xml -Dtest=PersistenceIntegrationTest test` passed (4 tests), and `mvn -f backend\pom.xml test` passed (5 tests total), using Testcontainers 2.0.5. The test-only dependency update resolved the Docker discovery issue; no Docker Desktop settings or Compose database/volume were changed.
 
 Frontend production build:
 
@@ -115,14 +120,14 @@ docker compose ps
 Invoke-RestMethod http://localhost:8080/api/health
 ```
 
-These commands check only the U1 application skeleton and health endpoint. Database schema, migrations, application-to-database persistence, authentication/security, task behavior, GitHub Actions, and assessment deployment are planned for later units and are not delivered by U1.
+The persistence integration test is intended to cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, and unique revocation `jti`. Authentication/security, task APIs, GitHub Actions, and assessment deployment are planned for later units and are not delivered by U2.
 
 Assessment deployment is required, but the provider and topology remain open until the constraints are confirmed and approved. Docker Compose in this repository is for local development only.
 
 ## Security and scope
 
-The committed `.env.example` contains local-only placeholder credentials, not production secrets. Keep real secrets in the ignored `.env` locally and use an approved secret store for any future hosted environment. PostgreSQL is included as a Compose service, but U1 deliberately does not connect the backend to it; that work belongs to U2.
+The committed `.env.example` contains local-only placeholder credentials, not production secrets. Keep real secrets in the ignored `.env` locally and use an approved secret store for any future hosted environment. The backend connects to PostgreSQL over the Compose network using the existing PostgreSQL environment values. Flyway applies additive schema migrations at backend startup. Keep the named volume; do not run `docker compose down -v`.
 
 Later units retain the planned Spring Security/JWT access tokens, persistent PostgreSQL-backed revocation, server-side task ownership enforcement, automated tests, and GitHub Actions checks.
 
-The next unit is U2 — PostgreSQL persistence. Wait for explicit owner review and approval of U1 before starting it.
+U2 does not implement authentication, JWT revocation, task APIs, or UI behavior. Rerun and pass the isolated persistence integration tests and obtain explicit owner acceptance before starting U3.
