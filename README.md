@@ -4,7 +4,7 @@ TaskFlow is a personal task manager for the full-stack feature assessment. The a
 
 ## Project status
 
-**Sprint 3 — U5 implemented; owner review pending.** U1–U4 provide the application foundation, PostgreSQL persistence, authentication/revocation, and owner-scoped task APIs. U5 adds React registration/login/logout and task workflows with memory-only access-token state. U6/U7/U8, browser UAT, CI, and deployment have not started. No Compose services were started or modified as part of U5.
+**Sprint 4 — U6 verification performed; owner review pending.** U1–U5 provide the application foundation, PostgreSQL persistence, authentication/revocation, owner-scoped task APIs, and React workflows. U6 backend/frontend checks, browser UAT, and the Compose black-box acceptance script have been run; see the results below. U7/CI and U8/deployment have not started. A fresh Compose configuration/start was not attempted because the current shell did not have the existing `TASKFLOW_JWT_SECRET` value available; no Compose services or PostgreSQL data were recreated or reset.
 
 ## Planning documents
 
@@ -135,7 +135,27 @@ Access tokens are held in React memory only; the app starts signed out after a p
 
 **U5 verification (2026-10-13):** `npm test` passed (9 tests across 2 files); `npm run build` passed. `npm audit` reported 0 vulnerabilities with Vitest 5.0.4. No lint command exists, and manual browser UAT was not performed in U5.
 
-The persistence integration tests cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, unique revocation `jti`, authentication, logout replay, and task API behavior. GitHub Actions, full-stack UAT, and assessment deployment remain planned work.
+## U6 integration and acceptance verification
+
+**U6 verification (2026-10-14):**
+
+- `mvn -f backend\pom.xml test`: passed, 16 tests; `mvn -f backend\pom.xml package`: passed, 16 tests.
+- `npm --prefix frontend test`: passed, 15 tests across 4 files; `npm --prefix frontend run build`: passed. No frontend lint script is configured.
+- Manual browser UAT passed registration, duplicate-registration rejection, invalid-login handling, login/logout, task creation, completion, details, editing, and deletion.
+- `scripts\uat-compose-smoke.ps1`: passed all 27 checks. It verified registration and login responses, task CRUD, user B's GET/PATCH/DELETE denials for user A's task, no cross-user mutation, logout, rejection of the revoked token after restarting only the backend, and continued validity of user B's token. It removed only its generated test records; database row counts returned to their pre-test values.
+- After the script, frontend/backend/PostgreSQL containers were running and healthy; `/api/health` returned `{"status":"UP"}`, the frontend returned HTTP 200, and the existing `taskflow-postgres-data` named volume remained present and unchanged.
+
+To rerun the Compose acceptance test, use PowerShell from the repository root:
+
+```powershell
+.\scripts\uat-compose-smoke.ps1
+```
+
+The script uses uniquely generated UAT accounts and cleans up only its own task, users, and revocation records. It does not reset or delete the development database or volume.
+
+**Not verified:** `docker compose ps --all` was blocked during Compose variable interpolation because the current shell did not have the required `TASKFLOW_JWT_SECRET`; a fresh `docker compose config` or startup was not run. The already-running containers retained their configured environment and passed health checks; do not generate a replacement signing key, which would invalidate existing tokens. Before running Compose commands from a new shell, make sure its expected local environment configuration is available without printing or committing secrets. No Compose services were recreated for U6.
+
+The persistence integration tests cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, unique revocation `jti`, authentication, logout replay, and task API behavior. CI/GitHub Actions and assessment deployment remain planned; U6 did not configure or run CI or deploy the application. One account and its logout revocation row from the manual browser UAT remain in the development database; the app has no user-deletion route, and those records were not removed.
 
 Assessment deployment is required, but the provider and topology remain open until the constraints are confirmed and approved. Docker Compose in this repository is for local development only.
 
@@ -147,4 +167,4 @@ U3 delivers Spring Security/JWT access tokens and persistent PostgreSQL-backed r
 
 Sign-out clears browser memory only after the backend returns `204 No Content`. A network failure or unexpected response is reported as unconfirmed revocation and leaves the current session active.
 
-Review and explicitly accept U5 before starting U6. U6 will include integrated browser/UAT verification; U5 did not start, stop, or recreate Compose services.
+Review and explicitly accept U6 before starting U7 or U8. U6 did not run CI, configure deployment, or change the existing Compose configuration or database volume.

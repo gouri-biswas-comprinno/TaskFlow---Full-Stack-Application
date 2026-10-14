@@ -22,6 +22,8 @@ References: [01-project-brief-and-requirements.md](../01-project-brief-and-requi
 
 All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may be implemented after U1/U5 acceptance; Sprint 4 requires final revalidation against integrated commands.
 
+**Execution status (2026-10-14):** U6 verification has been performed and is awaiting owner review. Backend/frontend suites and builds, manual browser UAT, and the Compose black-box restart/revocation smoke test passed. A fresh Compose configuration/start was not verified because `TASKFLOW_JWT_SECRET` was unavailable to the invoking shell. Existing Compose services and the PostgreSQL named volume were left intact. U7 and U8 have not started.
+
 ## 5. Dependencies and prerequisites
 
 - U6 prerequisites: Sprint 3/U5 accepted and Compose stack available.
@@ -67,9 +69,28 @@ All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may
 - Deployment smoke over HTTPS for auth, CRUD, ownership, revocation, health, database persistence, and safe logs.
 - Confirm tests use isolated data and do not delete a user/developer volume as cleanup.
 
+### U6 execution evidence
+
+| Check | Result |
+|---|---|
+| `mvn -f backend\pom.xml test` | PASS — 16 tests |
+| `mvn -f backend\pom.xml package` | PASS — 16 tests |
+| `npm --prefix frontend test` | PASS — 15 tests across 4 files |
+| `npm --prefix frontend run build` | PASS |
+| Manual browser UAT | PASS — registration, duplicate registration, invalid login, login/logout, create/complete/view/edit/delete task |
+| `scripts\uat-compose-smoke.ps1` | PASS — all 27 checks, including two-user GET/PATCH/DELETE denial, backend-only restart, revoked-token rejection (401), and a still-valid second user's token (200) |
+| Cleanup and data retention | PASS — only generated smoke-test records removed; counts returned to baseline; existing database and named volume retained |
+| Final service health | PASS — frontend/backend/PostgreSQL containers running and healthy; frontend HTTP 200; backend health `UP` |
+| Fresh `docker compose config`/startup | NOT RUN — current shell did not have the configured `TASKFLOW_JWT_SECRET`; no service recreation or signing-key replacement was attempted |
+| CI, deployment, HTTPS release checks | NOT RUN — outside the U6 implementation completed here; U7/U8 remain pending |
+
+Manual browser UAT left one test account and its logout revocation row in the development database. They were not removed because the application has no user-deletion route. The black-box script's own generated records were cleaned without resetting the database or volume.
+
 ## 10. Documentation updates required
 
 Update [README.md](../../README.md) with truthful local and deployed run instructions, test commands, CI status links, deployment URL only if approved, and known limitations. Update architecture/runtime and validation/release docs with the selected host and verified constraints. Add troubleshooting entries with symptom, command, sanitized log, cause, resolution, and retest. Preserve evidence without credentials or tokens.
+
+**U6 troubleshooting evidence:** `docker compose ps --all` was blocked during Compose variable interpolation because the required `TASKFLOW_JWT_SECRET` was not available in the invoking PowerShell process. The existing containers remained healthy and the acceptance script restarted only the existing backend container, retaining its configured signing key and database connection. For future Compose commands, load the already-approved local environment configuration in the invoking shell without exposing it in logs or source control; do not generate a replacement key. Retest `docker compose config` only after the expected variable is available. A fresh Compose start remains unverified.
 
 ## 11. Risks, open decisions, and mitigations
 
