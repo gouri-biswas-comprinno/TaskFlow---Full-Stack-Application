@@ -100,7 +100,7 @@ describe("TaskFlow user interface", () => {
     const titleInput = within(card).getByLabelText("Task title");
     await user.clear(titleInput);
     await user.type(titleInput, "Updated slides");
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await user.click(screen.getByRole("button", { name: "Save Changes" }));
     expect(await screen.findByRole("heading", { name: "Updated slides" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("checkbox", { name: "Mark Updated slides complete" }));
@@ -170,4 +170,39 @@ describe("TaskFlow user interface", () => {
     );
 
   });
+
+  it("opens task details, returns to the list, and edits from the details view", async () => {
+    const user = userEvent.setup();
+    api.login.mockResolvedValueOnce(session);
+    api.listTasks.mockResolvedValueOnce([initialTask]);
+    api.updateTask.mockResolvedValueOnce({ ...initialTask, title: "Demo slides" });
+    render(<App />);
+
+    await user.type(screen.getByLabelText("Email"), session.email);
+    await user.type(screen.getByLabelText("Password"), "password1");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await user.click(await screen.findByRole("button", { name: /Prepare slides/ }));
+    expect(screen.getByRole("heading", { name: "Prepare slides" })).toBeInTheDocument();
+    expect(screen.getByText("Draft the demo")).toBeInTheDocument();
+    expect(screen.getByText("Status:")).toHaveTextContent("Active");
+    expect(screen.getByText("Created")).toBeInTheDocument();
+    expect(screen.getAllByText(initialTask.createdAt)).toHaveLength(2);
+
+    await user.click(screen.getByRole("button", { name: "Back to tasks" }));
+    expect(screen.getByRole("heading", { name: "Task list" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Prepare slides/ }));
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    const titleField = screen.getByLabelText("Task title");
+    await user.clear(titleField);
+    await user.type(titleField, "Demo slides");
+    await user.click(screen.getByRole("button", { name: "Save Changes" }));
+    expect(await screen.findByRole("heading", { name: "Demo slides" })).toBeInTheDocument();
+    expect(api.updateTask).toHaveBeenCalledWith(session.accessToken, "task-1", {
+      title: "Demo slides",
+      description: "Draft the demo",
+    });
+  });
+
 });

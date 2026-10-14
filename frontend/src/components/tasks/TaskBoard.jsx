@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createTask, deleteTask, listTasks, logout, updateTask } from "../../services/api.js";
+import TaskDetails from "./TaskDetails.jsx";
 import TaskEditor from "./TaskEditor.jsx";
 import TaskItem from "./TaskItem.jsx";
 
@@ -9,9 +10,11 @@ export default function TaskBoard({ session, onSignedOut }) {
   const [listError, setListError] = useState("");
   const [taskError, setTaskError] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [busyId, setBusyId] = useState("");
   const [creating, setCreating] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const selectedTask = tasks.find((task) => task.id === selectedTaskId);
 
   useEffect(() => {
     let active = true;
@@ -119,39 +122,63 @@ export default function TaskBoard({ session, onSignedOut }) {
       </header>
 
       {taskError && <p className="error-message" role="alert">{taskError}</p>}
-      <section className="add-task-panel" aria-label="Add a task">
-        <h3>Capture a task</h3>
-        <TaskEditor onSave={addTask} saving={creating} />
-      </section>
+      {selectedTask ? (
+        <TaskDetails
+          editing={editingId === selectedTask.id}
+          onBack={() => {
+            setSelectedTaskId(null);
+            setEditingId(null);
+          }}
+          onCancelEdit={() => setEditingId(null)}
+          onEdit={() => {
+            setTaskError("");
+            setEditingId(selectedTask.id);
+          }}
+          onSave={(fields) => saveTask(selectedTask.id, fields)}
+          saving={busyId === selectedTask.id}
+          task={selectedTask}
+        />
+      ) : (
+        <>
+          <section className="add-task-panel" aria-label="Add a task">
+            <h3>Capture a task</h3>
+            <TaskEditor onSave={addTask} saving={creating} />
+          </section>
 
-      <section className="task-list-section" aria-label="Task list">
-        <div className="section-heading">
-          <h3>Task list</h3>
-          {!loading && !listError && <span className="task-count">{tasks.length}</span>}
-        </div>
-        {loading && <p className="muted" role="status">Loading your tasks…</p>}
-        {listError && <p className="error-message" role="alert">{listError}</p>}
-        {!loading && !listError && tasks.length === 0 && (
-          <p className="empty-state" role="status">No tasks yet. Add your first task above.</p>
-        )}
-        <ul className="task-list">
-          {tasks.map((task) => (
-            <TaskItem
-              busy={busyId === task.id}
-              editing={editingId === task.id}
-              key={task.id}
-              onDelete={() => removeTask(task)}
-              onEdit={() => {
-                setTaskError("");
-                setEditingId(editingId === task.id ? null : task.id);
-              }}
-              onSave={(fields) => saveTask(task.id, fields)}
-              onToggle={() => toggleTask(task)}
-              task={task}
-            />
-          ))}
-        </ul>
-      </section>
+          <section className="task-list-section" aria-label="Task list">
+            <div className="section-heading">
+              <h3>Task list</h3>
+              {!loading && !listError && <span className="task-count">{tasks.length}</span>}
+            </div>
+            {loading && <p className="muted" role="status">Loading your tasks…</p>}
+            {listError && <p className="error-message" role="alert">{listError}</p>}
+            {!loading && !listError && tasks.length === 0 && (
+              <p className="empty-state" role="status">No tasks yet. Add your first task above.</p>
+            )}
+            <ul className="task-list">
+              {tasks.map((task) => (
+                <TaskItem
+                  busy={busyId === task.id}
+                  editing={editingId === task.id}
+                  key={task.id}
+                  onDelete={() => removeTask(task)}
+                  onEdit={() => {
+                    setTaskError("");
+                    setEditingId(editingId === task.id ? null : task.id);
+                  }}
+                  onOpen={() => {
+                    setEditingId(null);
+                    setSelectedTaskId(task.id);
+                  }}
+                  onSave={(fields) => saveTask(task.id, fields)}
+                  onToggle={() => toggleTask(task)}
+                  task={task}
+                />
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
     </section>
   );
 }

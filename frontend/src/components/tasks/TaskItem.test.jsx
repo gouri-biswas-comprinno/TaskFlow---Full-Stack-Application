@@ -15,6 +15,7 @@ describe("TaskItem", () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
     const onDelete = vi.fn();
+    const onOpen = vi.fn();
     const onToggle = vi.fn();
 
     render(
@@ -24,6 +25,7 @@ describe("TaskItem", () => {
           editing={false}
           onDelete={onDelete}
           onEdit={onEdit}
+          onOpen={onOpen}
           onSave={vi.fn()}
           onToggle={onToggle}
           task={task}
@@ -33,6 +35,7 @@ describe("TaskItem", () => {
 
     expect(screen.getByText(task.title)).toBeInTheDocument();
     expect(screen.getByText(task.description)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Prepare slides/ }));
     await user.click(screen.getByRole("button", { name: "Edit" }));
     await user.click(screen.getByRole("button", { name: "Delete" }));
     await user.click(screen.getByRole("checkbox", { name: "Mark Prepare slides complete" }));
@@ -40,6 +43,7 @@ describe("TaskItem", () => {
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onDelete).toHaveBeenCalledOnce();
     expect(onToggle).toHaveBeenCalledOnce();
+    expect(onOpen).toHaveBeenCalledOnce();
   });
 
   it("renders the editor when editing", () => {
@@ -50,6 +54,7 @@ describe("TaskItem", () => {
           editing
           onDelete={vi.fn()}
           onEdit={vi.fn()}
+          onOpen={vi.fn()}
           onSave={vi.fn()}
           onToggle={vi.fn()}
           task={task}
@@ -58,6 +63,6 @@ describe("TaskItem", () => {
     );
 
     expect(screen.getByLabelText("Task title")).toHaveValue(task.title);
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save Changes" })).toBeInTheDocument();
   });
 });

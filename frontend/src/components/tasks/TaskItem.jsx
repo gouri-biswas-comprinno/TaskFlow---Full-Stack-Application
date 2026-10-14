@@ -4,6 +4,7 @@ export default function TaskItem({
   busy,
   onDelete,
   onEdit,
+  onOpen,
   onSave,
   onToggle,
   task,
@@ -29,8 +30,14 @@ export default function TaskItem({
               type="checkbox"
             />
             <div className="task-copy">
-              <h4>{task.title}</h4>
-              {task.description && <p>{task.description}</p>}
+              <button
+                className="task-open-button"
+                onClick={onOpen}
+                type="button"
+              >
+                <h4>{task.title}</h4>
+                {task.description && <p>{task.description}</p>}
+              </button>
             </div>
           </div>
           <div className="task-actions">

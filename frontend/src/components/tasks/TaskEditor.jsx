@@ -25,7 +25,7 @@ export default function TaskEditor({ initialTask, onCancel, onSave, saving }) {
   }
 
   return (
-    <form className="task-editor" onSubmit={handleSubmit}>
+    <form className={`task-editor${initialTask ? " is-editing" : ""}`} onSubmit={handleSubmit}>
       <label htmlFor={initialTask ? `edit-title-${initialTask.id}` : "new-task-title"}>
         Task title
       </label>
@@ -50,10 +50,10 @@ export default function TaskEditor({ initialTask, onCancel, onSave, saving }) {
       {error && <p className="error-message" role="alert">{error}</p>}
       <div className="button-row">
         <button className="primary-button" disabled={saving} type="submit">
-          {saving ? "Saving…" : initialTask ? "Save changes" : "Add task"}
+          {saving ? "Saving…" : initialTask ? "Save Changes" : "Add task"}
         </button>
         {initialTask && (
-          <button className="secondary-button" onClick={onCancel} type="button">
+          <button className="secondary-button cancel-edit-button" onClick={onCancel} type="button">
             Cancel
           </button>
         )}
