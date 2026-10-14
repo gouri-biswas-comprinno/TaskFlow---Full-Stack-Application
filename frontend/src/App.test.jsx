@@ -84,12 +84,19 @@ describe("TaskFlow user interface", () => {
     await user.type(screen.getByLabelText("Password"), "password1");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
     expect(await screen.findByRole("heading", { name: "My tasks" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Main navigation" })).toBeInTheDocument();
     expect(api.listTasks).toHaveBeenCalledWith(session.accessToken);
 
-    await user.type(screen.getByLabelText("Task title"), "Prepare slides");
-    await user.type(screen.getByLabelText("Description (optional)"), "Draft the demo");
+    const taskTitle = screen.getByLabelText("Task title");
+    const taskDescription = screen.getByLabelText("Description (optional)");
+    expect(taskTitle).toHaveAttribute("placeholder", "What needs to get done?");
+    expect(taskDescription).toHaveAttribute("placeholder", "Add details to help you remember.");
+    await user.type(taskTitle, "Prepare slides");
+    await user.type(taskDescription, "Draft the demo");
     await user.click(screen.getByRole("button", { name: "Add task" }));
     expect(await screen.findByRole("heading", { name: "Prepare slides" })).toBeInTheDocument();
+    expect(taskTitle).toHaveValue("");
+    expect(taskDescription).toHaveValue("");
     expect(api.createTask).toHaveBeenCalledWith(session.accessToken, {
       title: "Prepare slides",
       description: "Draft the demo",
@@ -187,7 +194,8 @@ describe("TaskFlow user interface", () => {
     expect(screen.getByText("Draft the demo")).toBeInTheDocument();
     expect(screen.getByText("Status:")).toHaveTextContent("Active");
     expect(screen.getByText("Created")).toBeInTheDocument();
-    expect(screen.getAllByText(initialTask.createdAt)).toHaveLength(2);
+    expect(screen.getAllByText(/\d{2} [A-Z][a-z]{2} \d{4}, \d{1,2}:\d{2} (AM|PM)/))
+      .toHaveLength(2);
 
     await user.click(screen.getByRole("button", { name: "Back to tasks" }));
     expect(screen.getByRole("heading", { name: "Task list" })).toBeInTheDocument();
@@ -203,6 +211,28 @@ describe("TaskFlow user interface", () => {
       title: "Demo slides",
       description: "Draft the demo",
     });
+  });
+
+  it("keeps task form values when creating a task fails", async () => {
+    const user = userEvent.setup();
+    api.login.mockResolvedValueOnce(session);
+    api.listTasks.mockResolvedValueOnce([]);
+    api.createTask.mockRejectedValueOnce(new Error("Task could not be saved"));
+    render(<App />);
+
+    await user.type(screen.getByLabelText("Email"), session.email);
+    await user.type(screen.getByLabelText("Password"), "password1");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    const taskTitle = await screen.findByLabelText("Task title");
+    const taskDescription = screen.getByLabelText("Description (optional)");
+    await user.type(taskTitle, "Prepare slides");
+    await user.type(taskDescription, "Draft the demo");
+    await user.click(screen.getByRole("button", { name: "Add task" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Task could not be saved");
+    expect(taskTitle).toHaveValue("Prepare slides");
+    expect(taskDescription).toHaveValue("Draft the demo");
   });
 
 });

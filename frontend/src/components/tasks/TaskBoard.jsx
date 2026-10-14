@@ -39,8 +39,10 @@ export default function TaskBoard({ session, onSignedOut }) {
     try {
       const task = await createTask(session.accessToken, fields);
       setTasks((current) => [task, ...current]);
+      return true;
     } catch (requestError) {
       setTaskError(requestError.message);
+      return false;
     } finally {
       setCreating(false);
     }
@@ -104,7 +106,7 @@ export default function TaskBoard({ session, onSignedOut }) {
   }
 
   return (
-    <section className="workspace" aria-labelledby="tasks-heading">
+    <section className="workspace" id="task-workspace" aria-labelledby="tasks-heading">
       <header className="workspace-header">
         <div>
           <p className="eyebrow">YOUR PERSONAL TASK SPACE</p>

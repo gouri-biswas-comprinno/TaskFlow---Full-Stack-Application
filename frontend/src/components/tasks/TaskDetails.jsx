@@ -1,16 +1,34 @@
 import TaskEditor from "./TaskEditor.jsx";
 
 function TaskDate({ label, value }) {
-  if (!value) return null;
+  const date = value ? new Date(value) : null;
+  const isValidDate = date && !Number.isNaN(date.getTime());
+  const formattedDate = isValidDate
+    ? formatTaskTimestamp(date)
+    : "Not available";
 
   return (
     <div className="task-detail-meta-item">
       <dt>{label}</dt>
       <dd>
-        <time dateTime={value}>{value}</time>
+        <time dateTime={isValidDate ? value : undefined}>{formattedDate}</time>
       </dd>
     </div>
   );
+}
+
+function formatTaskTimestamp(date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(date);
+  const part = (type) => parts.find((item) => item.type === type)?.value ?? "";
+
+  return `${part("day")} ${part("month")} ${part("year")}, ${part("hour")}:${part("minute")} ${part("dayPeriod").toUpperCase()}`;
 }
 
 export default function TaskDetails({

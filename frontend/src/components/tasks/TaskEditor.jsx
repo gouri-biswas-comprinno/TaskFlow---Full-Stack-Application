@@ -21,7 +21,11 @@ export default function TaskEditor({ initialTask, onCancel, onSave, saving }) {
       return;
     }
     setError("");
-    await onSave({ title: trimmedTitle, description: description.trim() || null });
+    const saved = await onSave({ title: trimmedTitle, description: description.trim() || null });
+    if (!initialTask && saved) {
+      setTitle("");
+      setDescription("");
+    }
   }
 
   return (
@@ -34,6 +38,7 @@ export default function TaskEditor({ initialTask, onCancel, onSave, saving }) {
         id={initialTask ? `edit-title-${initialTask.id}` : "new-task-title"}
         maxLength={200}
         onChange={(event) => setTitle(event.target.value)}
+        placeholder="What needs to get done?"
         required
         value={title}
       />
@@ -44,6 +49,7 @@ export default function TaskEditor({ initialTask, onCancel, onSave, saving }) {
         id={initialTask ? `edit-description-${initialTask.id}` : "new-task-description"}
         maxLength={2000}
         onChange={(event) => setDescription(event.target.value)}
+        placeholder="Add details to help you remember."
         rows={2}
         value={description}
       />
