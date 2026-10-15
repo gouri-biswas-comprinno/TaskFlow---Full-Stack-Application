@@ -22,7 +22,7 @@ References: [01-project-brief-and-requirements.md](../01-project-brief-and-requi
 
 All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may be implemented after U1/U5 acceptance; Sprint 4 requires final revalidation against integrated commands.
 
-**Execution status (2026-10-14):** U6 verification has been performed and is awaiting owner review. Backend/frontend suites and builds, manual browser UAT, and the Compose black-box restart/revocation smoke test passed. A fresh Compose configuration/start was not verified because `TASKFLOW_JWT_SECRET` was unavailable to the invoking shell. Existing Compose services and the PostgreSQL named volume were left intact. U7 and U8 have not started.
+**Execution status (2026-10-15):** U6 has been approved. U7 workflow changes and workflow-equivalent local checks are complete and await owner review. GitHub Actions has not run because GitHub currently reports no workflows; the owner must commit and push before hosted push/PR checks can execute. U8 has not started.
 
 ## 5. Dependencies and prerequisites
 
@@ -85,6 +85,23 @@ All are defined in [03-construction-plan.md](../03-construction-plan.md). U7 may
 | CI, deployment, HTTPS release checks | NOT RUN — outside the U6 implementation completed here; U7/U8 remain pending |
 
 Manual browser UAT left one test account and its logout revocation row in the development database. They were not removed because the application has no user-deletion route. The black-box script's own generated records were cleaned without resetting the database or volume.
+
+### U7 CI workflow
+
+Workflow: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml). It runs on pushes and pull requests with `contents: read` only. Backend job uses Java 21 and Maven `verify` (including Docker-backed Testcontainers tests); frontend job uses Node.js 22, `npm ci`, `npm test`, and `npm run build`. Jobs do not use secrets, deployment credentials, or publish images. No frontend lint script/configuration exists, so linting is not run and no tooling was added.
+
+Local equivalents from the repository root:
+
+```powershell
+mvn --batch-mode --no-transfer-progress -f backend\pom.xml verify
+npm --prefix frontend ci
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+**U7 local results (2026-10-15):** backend `mvn --batch-mode --no-transfer-progress -f backend\pom.xml verify` exited successfully; Surefire reports show 5 suites, 16 tests, 0 failures, 0 errors, and 0 skipped. Frontend `npm --prefix frontend ci` exited successfully and audited 140 packages with 0 vulnerabilities (one deprecation warning was emitted); `npm --prefix frontend test` passed (4 files, 15 tests), and `npm --prefix frontend run build` passed. `git diff --check` passed. No application, dependency manifest/lockfile, Docker, or environment files were changed.
+
+**GitHub run status:** not run. GitHub Actions currently reports zero configured workflows for this repository. The workflow cannot run on GitHub until it is committed and pushed; the owner will perform those actions. No commit or push was made. The actual hosted run remains unverified.
 
 ## 10. Documentation updates required
 

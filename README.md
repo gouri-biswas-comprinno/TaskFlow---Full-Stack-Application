@@ -4,7 +4,7 @@ TaskFlow is a personal task manager for the full-stack feature assessment. The a
 
 ## Project status
 
-**Sprint 4 — U6 verification performed; owner review pending.** U1–U5 provide the application foundation, PostgreSQL persistence, authentication/revocation, owner-scoped task APIs, and React workflows. U6 backend/frontend checks, browser UAT, and the Compose black-box acceptance script have been run; see the results below. U7/CI and U8/deployment have not started. A fresh Compose configuration/start was not attempted because the current shell did not have the existing `TASKFLOW_JWT_SECRET` value available; no Compose services or PostgreSQL data were recreated or reset.
+**Sprint 4 — U7 CI checks configured locally; owner review pending.** U1–U6 are implemented and U6 verification is recorded below. U7 adds GitHub Actions for backend verification and frontend tests/build on pushes and pull requests. The workflow has not run on GitHub because no workflow exists remotely yet and no commit or push was made. U8/deployment has not started.
 
 ## Planning documents
 
@@ -135,6 +135,26 @@ Access tokens are held in React memory only; the app starts signed out after a p
 
 **U5 verification (2026-10-13):** `npm test` passed (9 tests across 2 files); `npm run build` passed. `npm audit` reported 0 vulnerabilities with Vitest 5.0.4. No lint command exists, and manual browser UAT was not performed in U5.
 
+## CI checks
+
+The GitHub Actions workflow is [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs two independent jobs on every push and pull request with `contents: read` permission only:
+
+- Backend: Java 21 and `mvn --batch-mode --no-transfer-progress -f backend/pom.xml verify`. Maven tests include Testcontainers PostgreSQL integration tests; GitHub-hosted Ubuntu runners provide Docker for these tests.
+- Frontend: Node.js 22, `npm ci`, `npm test`, and `npm run build` from `frontend`.
+
+The frontend currently has no lint script or configured lint tooling, so the workflow does not install or run a linter. The workflow does not use deployment credentials, publish images, or deploy.
+
+Run the same checks locally from the repository root:
+
+```powershell
+mvn --batch-mode --no-transfer-progress -f backend\pom.xml verify
+npm --prefix frontend ci
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+**U7 local verification (2026-10-15):** `mvn --batch-mode --no-transfer-progress -f backend\pom.xml verify` passed (5 suites, 16 tests, 0 failures, 0 errors, 0 skipped). `npm --prefix frontend ci` completed (140 packages audited, 0 vulnerabilities; npm emitted one dependency deprecation warning). `npm --prefix frontend test` passed (4 files, 15 tests), and `npm --prefix frontend run build` passed. **GitHub Actions status:** not run; GitHub currently reports no workflows for this repository. The owner must commit and push the workflow before push/PR triggers can execute. No commit or push was performed for U7.
+
 ## U6 integration and acceptance verification
 
 **U6 verification (2026-10-14):**
@@ -155,7 +175,7 @@ The script uses uniquely generated UAT accounts and cleans up only its own task,
 
 **Not verified:** `docker compose ps --all` was blocked during Compose variable interpolation because the current shell did not have the required `TASKFLOW_JWT_SECRET`; a fresh `docker compose config` or startup was not run. The already-running containers retained their configured environment and passed health checks; do not generate a replacement signing key, which would invalidate existing tokens. Before running Compose commands from a new shell, make sure its expected local environment configuration is available without printing or committing secrets. No Compose services were recreated for U6.
 
-The persistence integration tests cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, unique revocation `jti`, authentication, logout replay, and task API behavior. CI/GitHub Actions and assessment deployment remain planned; U6 did not configure or run CI or deploy the application. One account and its logout revocation row from the manual browser UAT remain in the development database; the app has no user-deletion route, and those records were not removed.
+The persistence integration tests cover Flyway table creation, unique email, task ownership foreign-key and owner-scoped lookup, unique revocation `jti`, authentication, logout replay, and task API behavior. U6 full-stack UAT is recorded above. The U7 GitHub Actions workflow is configured locally but has not yet run on GitHub; assessment deployment remains planned. One account and its logout revocation row from the manual browser UAT remain in the development database; the app has no user-deletion route, and those records were not removed.
 
 Assessment deployment is required, but the provider and topology remain open until the constraints are confirmed and approved. Docker Compose in this repository is for local development only.
 
@@ -167,4 +187,4 @@ U3 delivers Spring Security/JWT access tokens and persistent PostgreSQL-backed r
 
 Sign-out clears browser memory only after the backend returns `204 No Content`. A network failure or unexpected response is reported as unconfirmed revocation and leaves the current session active.
 
-Review and explicitly accept U6 before starting U7 or U8. U6 did not run CI, configure deployment, or change the existing Compose configuration or database volume.
+Review and explicitly accept U7 before starting U8. U7 did not configure deployment or change the existing Compose configuration or database volume.
